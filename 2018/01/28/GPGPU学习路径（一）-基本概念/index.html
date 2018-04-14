@@ -1,0 +1,927 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.1" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="GPGPU," />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="Alice Blog" type="application/atom+xml" />
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.png?v=5.1.1" />
+
+
+
+
+
+
+<meta name="description" content="GPU与GPGPUGPU与CPU通常我们所说的显卡（video card/graphics card）也叫显示适配器、图形加速卡。其中GPU是显卡的计算核心（显示核心）。除了GPU外，显卡内还有显示基本输入输出系统（Video BIOS）、显存、随机存取存储器的数模转换器（RAMDAC）、输出部分（包括VGA、DVI、供S-Video使用的VIVO、高清媒体使用的HDMI等）、主板接口、散热装置和">
+<meta name="keywords" content="GPGPU">
+<meta property="og:type" content="article">
+<meta property="og:title" content="GPGPU学习路径（一）--基本概念">
+<meta property="og:url" content="http://www.alicelh.xyz/2018/01/28/GPGPU学习路径（一）-基本概念/index.html">
+<meta property="og:site_name" content="Alice Blog">
+<meta property="og:description" content="GPU与GPGPUGPU与CPU通常我们所说的显卡（video card/graphics card）也叫显示适配器、图形加速卡。其中GPU是显卡的计算核心（显示核心）。除了GPU外，显卡内还有显示基本输入输出系统（Video BIOS）、显存、随机存取存储器的数模转换器（RAMDAC）、输出部分（包括VGA、DVI、供S-Video使用的VIVO、高清媒体使用的HDMI等）、主板接口、散热装置和">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://www.alicelh.xyz/img/CPUGPU.JPG">
+<meta property="og:image" content="http://www.alicelh.xyz/img/图形流水线.png">
+<meta property="og:image" content="http://www.alicelh.xyz/img/OpenGL图形流水线.png">
+<meta property="og:updated_time" content="2018-02-01T06:22:52.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="GPGPU学习路径（一）--基本概念">
+<meta name="twitter:description" content="GPU与GPGPUGPU与CPU通常我们所说的显卡（video card/graphics card）也叫显示适配器、图形加速卡。其中GPU是显卡的计算核心（显示核心）。除了GPU外，显卡内还有显示基本输入输出系统（Video BIOS）、显存、随机存取存储器的数模转换器（RAMDAC）、输出部分（包括VGA、DVI、供S-Video使用的VIVO、高清媒体使用的HDMI等）、主板接口、散热装置和">
+<meta name="twitter:image" content="http://www.alicelh.xyz/img/CPUGPU.JPG">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post","offset":12,"offset_float":0,"b2t":false,"scrollpercent":false},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://www.alicelh.xyz/2018/01/28/GPGPU学习路径（一）-基本概念/"/>
+
+
+
+
+
+  <title>GPGPU学习路径（一）--基本概念 | Alice Blog</title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+
+
+
+
+
+
+  <div style="display: none;">
+    <script src="//s95.cnzz.com/z_stat.php?id=1261855600&web_id=1261855600" language="JavaScript"></script>
+  </div>
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Alice Blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://www.alicelh.xyz/2018/01/28/GPGPU学习路径（一）-基本概念/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Alice Meng">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/profile.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Alice Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                GPGPU学习路径（一）--基本概念
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-01-28T19:30:00+08:00">
+                2018-01-28
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/GPGPU/" itemprop="url" rel="index">
+                    <span itemprop="name">GPGPU</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+             <span id="/2018/01/28/GPGPU学习路径（一）-基本概念/" class="leancloud_visitors" data-flag-title="GPGPU学习路径（一）--基本概念">
+               <span class="post-meta-divider">|</span>
+               <span class="post-meta-item-icon">
+                 <i class="fa fa-eye"></i>
+               </span>
+               
+                 <span class="post-meta-item-text">阅读次数 </span>
+               
+                 <span class="leancloud-visitors-count"></span>
+             </span>
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h3 id="GPU与GPGPU"><a href="#GPU与GPGPU" class="headerlink" title="GPU与GPGPU"></a>GPU与GPGPU</h3><h4 id="GPU与CPU"><a href="#GPU与CPU" class="headerlink" title="GPU与CPU"></a>GPU与CPU</h4><p>通常我们所说的显卡（video card/graphics card）也叫显示适配器、图形加速卡。其中GPU是显卡的计算核心（显示核心）。除了GPU外，显卡内还有显示基本输入输出系统（Video BIOS）、显存、随机存取存储器的数模转换器（RAMDAC）、输出部分（包括VGA、DVI、供S-Video使用的VIVO、高清媒体使用的HDMI等）、主板接口、散热装置和电源。GPU，即<font color="#0099ff">图形处理器</font>，其设计源于完成二维或三维图形处理任务。GPU最初被用作纹理映射和多边形着色等需要很多存储空间的计算机图形任务，渐渐地更多的任务被转移到GPU上，比如在不同的坐标系下旋转、平移顶点等几何计算任务。随着可编程的着色功能被加入硬件，GPU的并行架构和可编程模型使其被用于通用计算。</p>
+<p>而CPU作为强大的通用处理器，其除了布置一定的计算单元外，还把设计的重点放在了复杂的缓存系统、分支预测系统和各种控制逻辑上。相比之下，GPU使用芯片上大多数的晶体管作为纯计算单元。这样的架构设计决定了GPU拥有强大的浮点运算能力，却在灵活性和通用性方面不如CPU。所以，GPU擅长于密集型、高度并行化计算，比如图形渲染。<br><img src="/img/CPUGPU.JPG" alt=""></p>
+<blockquote>
+<p>上图来源NVIDIA官方文档，其中ALU表示计算单元，可以看到GPU的计算核心远远多于CPU,但GPU的核心与CPU的核心不同。每个GPU核心，即着色器，都是一个标量处理器，它不具备CPU一样的多级缓存和分支预测功能，结构相对简单，主频也较低。从某种意义来讲，它们的计算能力是靠数量取胜的。</p>
+</blockquote>
+<h4 id="GPU与GPGPU-1"><a href="#GPU与GPGPU-1" class="headerlink" title="GPU与GPGPU"></a>GPU与GPGPU</h4><p>GPGPU（General Purpose Computing on Graphics Processing Unit）就是图形处理器通用计算技术。简单地说，其就是把显卡不止用于做图形处理，更把它像CPU这样的通用处理器一样用于做通用计算。</p>
+<h3 id="经典GPGPU"><a href="#经典GPGPU" class="headerlink" title="经典GPGPU"></a>经典GPGPU</h3><h4 id="图形流水线"><a href="#图形流水线" class="headerlink" title="图形流水线"></a>图形流水线</h4><p>现代GPU的工作流程：从CPU处获得三维模型，这些模型是用顶点坐标和色彩信息组成的；GPU对这些顶点的位置进行一系列的变换，然后投影到帧缓存上；投影的同时，GPU根据显示器的大小和分辨率对投影结果进行裁剪、光栅化；每个帧缓存里的像素或者像素多边形的色彩经过GPU的一系列变换；最后的结果被GPU输出到显示器上。这一连串的图形处理任务形象地称为图形流水线。所以说，图形流水线是GPU工作的通用模型。<br><img src="/img/图形流水线.png" alt=""></p>
+<h4 id="经典GPGPU方法"><a href="#经典GPGPU方法" class="headerlink" title="经典GPGPU方法"></a>经典GPGPU方法</h4><p>图形流水线由不同的应用程序接口（API）来定义它们的功能，最主要的是OpenGL和Direct3D。也就是说，OpenGL和Direct3D是对图形流水线的一种实现。其中，OpenGL的设计理念是，它尽可能提供对GPU更底层的硬件访问，同时保证接口的平台无关性。<br>OpenGL定义的图形流水线符合上图的图形流水线模型。作为接口，它进一步定义了流水线中各功能和硬件之间的关系以及实现这些功能的具体方法。下图是一个简化的OpenGL图形流水线。<br><img src="/img/OpenGL图形流水线.png" alt=""></p>
+<p>顶点着色器和片段着色器这两个模块是可以让用户加载自定义算法的。只有支持可编程图形流水线的GPU才可以让用户自定义算法来实现着色器的功能。<br>为着色器编程的语言叫做着色语言。目前最常用的语言主要是随OpenGL发展而来的GLSL(OpenGL Shading Language)、NVIDIA设计的Cg(C for Graphics)和DirectX支持的HLSL(High Level Shader Language)。<br><br>使用着色语言和图形API实现的GPGPU方法就是<font color="#0099ff">经典GPGPU方法</font>，如用GLSL和Opengl实现。</p>
+<h3 id="GPGPU语言"><a href="#GPGPU语言" class="headerlink" title="GPGPU语言"></a>GPGPU语言</h3><h4 id="概念"><a href="#概念" class="headerlink" title="概念"></a>概念</h4><p>随着GPU作为通用计算的GPGPU技术兴起，专门用于实现GPGPU技术的编程语言应运而生，它们被称为GPGPU语言或GPU计算语言。最主要的语言有CUDA、OpenCL、DirectCompute……<br>它们设计的目的是封装GPU尽可能多的与CPU不同的特殊性质，提供对GPU进行通用计算的接口。它们被设计成具有近似于高级语言的语法特性，易于学习。另外，人们不用为了学习GPGPU而去学习过多的计算机图形学知识，相比于经典的GPGPU方法，它们在开始时的学习曲线比较平缓。</p>
+<h4 id="CUDA"><a href="#CUDA" class="headerlink" title="CUDA"></a>CUDA</h4><p>CUDA是当今最流行的GPGPU语言，与以往GPU编程语言不同的是，它不再面向图形计算，而是一种专业的GPGPU语言。它提供一些编译器和一些开发工具，让开发人员可以以一种类似于C的编程语言来开发GPGPU程序，并同时运行于CPU与GPU上。<br>确切地说，CUDA是NVIDIA公司设计的一个计算架构，针对异构计算资源下的大规模并行计算。官方为这个架构提供的语言是C for CUDA，简称为CUDA C。一般人们也会用CUDA指代CUDA C。</p>
+<h4 id="异构计算资源"><a href="#异构计算资源" class="headerlink" title="异构计算资源"></a>异构计算资源</h4><p>前面提到了异构计算资源，这里再具体地说一下。GPGPU不是单纯地使用GPU进行通用计算，而是一种利用异构计算资源的大规模并行计算。也就是说，计算资源中含有多个形态各异的处理器。拿我们的个人电脑来说，系统上的CPU和GPU就构成了异构计算资源。而GPGPU通过同时启用资源中所有可用的处理器来进行协同计算。</p>
+<h3 id="并行计算模型"><a href="#并行计算模型" class="headerlink" title="并行计算模型"></a>并行计算模型</h3><p>按照实现并行的层次分，即底层的并行或是高层的并行：</p>
+<pre><code>1. 位并行（相对较老），通过增加处理器字节长度来提高并行效率。
+2. 指令并行（20世纪90年代中期之前的关注重点）。现代CPU都有一个多级指令流水线。（五级指令流水线：读取、解码、执行、访问内存、写入）。如果流水线中的每级都相对独立，即执行某一级的任务并不取决于另一极的结果，流水线中的各级就可以同时执行。
+3. 数据并行。多个不同的数据同时被相同的指令、指令集或者算法处理。这与GPU的并行概念是相同的。
+4. 任务并行。在多个不同的数据上执行不同的指令、指令集或者算法。这与多核CPU的并行计算模型是相同的。
+</code></pre><p>从数据流和指令的角度把计算模型分为四类（费林分类法，它只判断数据流的数目和不同指令的数目）：</p>
+<pre><code>1. 单指令单数据流（SISD）:非并行计算，如单核CPU
+2. 单指令多数据流（SIMD）:是GPU的计算模型，与上述数据并行模式相同。
+3. 多指令单数据流（MISD）：在同一个数据流上执行不同的指令。流水线模型可以被认为是一种MISD.
+4. 多指令多数据流（MIMD）:多核CPU的计算模型，与上述任务并行模式相同。
+</code></pre><p>SIMD模型的特点是每个数据经由同样的指令序列处理，而处理数据的次序是不确定的。这里面还隐藏了一个要点，就是每个数据的处理是不相关的，即任一线程的计算不得依赖于其他线程的结果（包括中间结果）。<br>相对经典GPGPU技术而言，GPGPU语言对算法是否符合SIMD模型的要求有所放松。在CUDA中，程序在整体上不必遵循SIMD的要求，只需要那些必须在GPU上执行的部分局部地符合SIMD模型。CUDA提出的<strong>SIMT(Single Instruction Multiple Threads)</strong> 概念更清楚地揭示了现代GPGPU语言的计算理念。按照费林分类法，SIMT也属于SIMD的范畴，因为它也是在多个数据上执行相同的指令。但在程序实现的过程中,SIMT允许用户来分配线程，而并行计算也是以线程为单位的。CUDA为每个线程制定了标识符（编号）。在已知数量的数据上，SIMT模型可以指定自定义数目的线程，并根据线程标识符设计线程与数据关联的映射法则。<br>使用着色语言实现的经典的GPGPU技术是基于普通的SIMD模型的，而基于SIMT模型的GPGPU语言就会灵活一些。</p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/GPGPU/" rel="tag"># GPGPU</a>
+          
+        </div>
+      
+
+      
+        
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2017/04/27/hello-world/" rel="next" title="Hello World">
+                <i class="fa fa-chevron-left"></i> Hello World
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/02/15/GPGPU学习路径（二）-OpenGL示例解析/" rel="prev" title="GPGPU学习路径（二）-OpenGL">
+                GPGPU学习路径（二）-OpenGL <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+      <div id="uyan_frame"></div>
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/profile.jpg"
+               alt="Alice Meng" />
+          <p class="site-author-name" itemprop="name">Alice Meng</p>
+           
+              <p class="site-description motion-element" itemprop="description"></p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives">
+                <span class="site-state-item-count">6</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-categories">
+              <a href="/categories/index.html">
+                <span class="site-state-item-count">2</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              <a href="/tags/index.html">
+                <span class="site-state-item-count">3</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+          <div class="feed-link motion-element">
+            <a href="/atom.xml" rel="alternate">
+              <i class="fa fa-rss"></i>
+              RSS
+            </a>
+          </div>
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/alicelh" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                  GitHub
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#GPU与GPGPU"><span class="nav-number">1.</span> <span class="nav-text">GPU与GPGPU</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#GPU与CPU"><span class="nav-number">1.1.</span> <span class="nav-text">GPU与CPU</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#GPU与GPGPU-1"><span class="nav-number">1.2.</span> <span class="nav-text">GPU与GPGPU</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#经典GPGPU"><span class="nav-number">2.</span> <span class="nav-text">经典GPGPU</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#图形流水线"><span class="nav-number">2.1.</span> <span class="nav-text">图形流水线</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#经典GPGPU方法"><span class="nav-number">2.2.</span> <span class="nav-text">经典GPGPU方法</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#GPGPU语言"><span class="nav-number">3.</span> <span class="nav-text">GPGPU语言</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#概念"><span class="nav-number">3.1.</span> <span class="nav-text">概念</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#CUDA"><span class="nav-number">3.2.</span> <span class="nav-text">CUDA</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#异构计算资源"><span class="nav-number">3.3.</span> <span class="nav-text">异构计算资源</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#并行计算模型"><span class="nav-number">4.</span> <span class="nav-text">并行计算模型</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy;  2017 - 
+  <span itemprop="copyrightYear">2018</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Alice Meng</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.1"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.1"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.1"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.1"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+    
+
+    
+      <!-- UY BEGIN -->
+      <script type="text/javascript" src="http://v2.uyan.cc/code/uyan.js?uid=2157020"></script>
+      <!-- UY END -->
+    
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+  <script src="https://cdn1.lncld.net/static/js/av-core-mini-0.6.1.js"></script>
+  <script>AV.initialize("BS8Q3ebsh7M1lGUiemcejhKC-gzGzoHsz", "76BnKTvDV9vWgtebMwepI9Hb");</script>
+  <script>
+    function showTime(Counter) {
+      var query = new AV.Query(Counter);
+      var entries = [];
+      var $visitors = $(".leancloud_visitors");
+
+      $visitors.each(function () {
+        entries.push( $(this).attr("id").trim() );
+      });
+
+      query.containedIn('url', entries);
+      query.find()
+        .done(function (results) {
+          var COUNT_CONTAINER_REF = '.leancloud-visitors-count';
+
+          if (results.length === 0) {
+            $visitors.find(COUNT_CONTAINER_REF).text(0);
+            return;
+          }
+
+          for (var i = 0; i < results.length; i++) {
+            var item = results[i];
+            var url = item.get('url');
+            var time = item.get('time');
+            var element = document.getElementById(url);
+
+            $(element).find(COUNT_CONTAINER_REF).text(time);
+          }
+          for(var i = 0; i < entries.length; i++) {
+            var url = entries[i];
+            var element = document.getElementById(url);
+            var countSpan = $(element).find(COUNT_CONTAINER_REF);
+            if( countSpan.text() == '') {
+              countSpan.text(0);
+            }
+          }
+        })
+        .fail(function (object, error) {
+          console.log("Error: " + error.code + " " + error.message);
+        });
+    }
+
+    function addCount(Counter) {
+      var $visitors = $(".leancloud_visitors");
+      var url = $visitors.attr('id').trim();
+      var title = $visitors.attr('data-flag-title').trim();
+      var query = new AV.Query(Counter);
+
+      query.equalTo("url", url);
+      query.find({
+        success: function(results) {
+          if (results.length > 0) {
+            var counter = results[0];
+            counter.fetchWhenSave(true);
+            counter.increment("time");
+            counter.save(null, {
+              success: function(counter) {
+                var $element = $(document.getElementById(url));
+                $element.find('.leancloud-visitors-count').text(counter.get('time'));
+              },
+              error: function(counter, error) {
+                console.log('Failed to save Visitor num, with error message: ' + error.message);
+              }
+            });
+          } else {
+            var newcounter = new Counter();
+            /* Set ACL */
+            var acl = new AV.ACL();
+            acl.setPublicReadAccess(true);
+            acl.setPublicWriteAccess(true);
+            newcounter.setACL(acl);
+            /* End Set ACL */
+            newcounter.set("title", title);
+            newcounter.set("url", url);
+            newcounter.set("time", 1);
+            newcounter.save(null, {
+              success: function(newcounter) {
+                var $element = $(document.getElementById(url));
+                $element.find('.leancloud-visitors-count').text(newcounter.get('time'));
+              },
+              error: function(newcounter, error) {
+                console.log('Failed to create');
+              }
+            });
+          }
+        },
+        error: function(error) {
+          console.log('Error:' + error.code + " " + error.message);
+        }
+      });
+    }
+
+    $(function() {
+      var Counter = AV.Object.extend("Counter");
+      if ($('.leancloud_visitors').length == 1) {
+        addCount(Counter);
+      } else if ($('.post-title-link').length > 1) {
+        showTime(Counter);
+      }
+    });
+  </script>
+
+
+
+  
+<script>
+(function(){
+    var bp = document.createElement('script');
+    var curProtocol = window.location.protocol.split(':')[0];
+    if (curProtocol === 'https') {
+        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';        
+    }
+    else {
+        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+    }
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(bp, s);
+})();
+</script>
+
+
+  
+
+  
+
+  
+
+</body>
+</html>
