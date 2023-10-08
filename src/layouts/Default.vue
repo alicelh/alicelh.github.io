@@ -177,7 +177,7 @@ footer p {
   overflow: hidden; /* hide text behind the cursor */
   border-right: 0.15em solid #000;
   /* define animation types for text + cursor */
-  animation: animated-text__3 5s steps(54, end) 1s 1 normal both,
+  animation: animated-text__3 4s steps(52, end) 1s 1 normal both,
     animated-cursor 900ms steps(36, end) 10;
   -webkit-animation-delay: 7s;
   animation-delay: 7s;
