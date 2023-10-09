@@ -127,7 +127,7 @@ footer {
   background-color: #000;
   color: white;
   width: 100%;
-  padding: 2px;
+  padding: 2px 0;
 }
 
 footer p {
