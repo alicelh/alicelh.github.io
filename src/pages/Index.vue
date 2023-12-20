@@ -21,7 +21,7 @@
           <a href="mailto:l.meng1@tue.nl" class="icon"
             ><i class="fa-solid fa-envelope fa-xl" style="color: #000000"></i
           ></a>
-          <g-link to="/CV_Linhao_Meng.pdf" class="icon" s>
+          <g-link href="/CV_Linhao_Meng.pdf" class="icon" target="_blank">
             <span class="icon-cv"></span>
           </g-link>
         </div>
