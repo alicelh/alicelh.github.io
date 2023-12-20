@@ -48,7 +48,7 @@
           <b>interactive tools</b> to enhance human’s ability to understand data
           and models in machine learning tasks.
         </p>
-        <p>
+        <p style="font-family: 'Comic Sans MS' ">
           <b>
             <i class="fa-solid fa-heart" style="color: #ff00ff"></i> I believe
             in the power of visualization to unveil latent patterns within data
