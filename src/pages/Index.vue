@@ -48,7 +48,7 @@
           <b>interactive tools</b> to enhance human’s ability to understand data
           and models in machine learning tasks.
         </p>
-        <p style="font-family: 'Comic Sans MS' ">
+        <p style="font-family: 'Comic Sans MS'">
           <b>
             <i class="fa-solid fa-heart" style="color: #ff00ff"></i> I believe
             in the power of visualization to unveil latent patterns within data
@@ -73,7 +73,10 @@
             <b>Linhao Meng</b>, Stef van den Elzen, Nicola Pezzotti, Anna
             Vilanova
           </div>
-          <div class="publishinfo">Accepted by IEEE VIS 2023</div>
+          <div class="publishinfo">
+            IEEE Transactions on Visualization and Computer Graphics (IEE VIS
+            2023)
+          </div>
           <div class="itemlinks">
             <a href="https://arxiv.org/abs/2308.13837"
               ><i class="fa-regular fa-file-pdf"></i> Paper
