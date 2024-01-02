@@ -74,7 +74,7 @@
             Vilanova
           </div>
           <div class="publishinfo">
-            IEEE Transactions on Visualization and Computer Graphics (IEE VIS
+            IEEE Transactions on Visualization and Computer Graphics (IEEE VIS
             2023)
           </div>
           <div class="itemlinks">
