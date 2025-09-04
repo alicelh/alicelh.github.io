@@ -2,11 +2,11 @@
   "name": "mysite",
   "private": true,
   "scripts": {
-    "build": "gridsome build",
+    "build": "export NODE_OPTIONS=--openssl-legacy-provider && gridsome build",
     "develop": "gridsome develop",
     "explore": "gridsome explore",
     "predeploy": "npm run build",
-    "deploy": "gh-pages -d dist"
+    "deploy": "export NODE_OPTIONS=--openssl-legacy-provider && gh-pages -d dist"
   },
   "dependencies": {
     "gh-pages": "^6.0.0",

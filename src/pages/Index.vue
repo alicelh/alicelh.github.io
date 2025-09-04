@@ -34,7 +34,7 @@
           <span class="tag">Explainable AI</span>
         </p>
         <p class="description">
-          Hi! My name is Linhao Meng. I am currently a 4th year Ph.D. student in
+          Hi! My name is Linhao Meng. I am currently a final year Ph.D. student in
           Computer Science at
           <a href="https://research.tue.nl/en/persons/linhao-meng"
             >Eindhoven Univeristy of Technology</a
@@ -181,7 +181,7 @@
         </div>
       </div>
       <div class="paperitem">
-        <g-image src="~/images/linesample.gif" class="paperimage" />
+        <g-image src="~/images/linesample.png" class="paperimage" />
         <div class="paperintro">
           <div class="papertitle">
             Visual Abstraction of Large Scale Geospatial Origin-Destination

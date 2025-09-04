@@ -26,7 +26,7 @@
       <slot />
     </div>
     <footer>
-      <p>&copy; 2023 Linhao Meng <br /></p>
+      <p>&copy; 2025 Linhao Meng <br /></p>
     </footer>
   </div>
 </template>
