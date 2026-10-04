@@ -1,15 +1,20 @@
 {
-  "name": "mysite",
+  "name": "alicelh-github-io",
+  "type": "module",
   "private": true,
   "scripts": {
-    "build": "export NODE_OPTIONS=--openssl-legacy-provider && gridsome build",
-    "develop": "gridsome develop",
-    "explore": "gridsome explore",
-    "predeploy": "npm run build",
-    "deploy": "export NODE_OPTIONS=--openssl-legacy-provider && gh-pages -d dist"
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "deploy": "astro build && gh-pages -d dist -t"
   },
   "dependencies": {
-    "gh-pages": "^6.0.0",
-    "gridsome": "^0.7.0"
+    "@fontsource-variable/fraunces": "^5.3.0",
+    "@fontsource-variable/inter": "^5.3.0",
+    "@fontsource-variable/jetbrains-mono": "^5.3.0",
+    "astro": "^7.3.5"
+  },
+  "devDependencies": {
+    "gh-pages": "^6.0.0"
   }
 }

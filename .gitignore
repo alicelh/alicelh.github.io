@@ -1,8 +1,11 @@
-*.log
-.cache
-.DS_Store
-src/.temp
 node_modules
 dist
+.astro
+.DS_Store
+*.log
 .env
 .env.*
+scripts/hero-data/sgd
+scripts/hero-data/class-constrained-t-SNE
+scripts/hero-data/*.npz
+scripts/hero-data/*.csv

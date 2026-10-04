@@ -1,0 +1,50 @@
+---
+import '@fontsource-variable/fraunces/opsz.css';
+import '@fontsource-variable/fraunces/opsz-italic.css';
+import '@fontsource-variable/inter';
+import '@fontsource-variable/jetbrains-mono';
+import '../styles/global.css';
+import { person } from '../data/profile';
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+const {
+  title = `${person.name} — data & interaction tools for AI`,
+  description = person.tagline,
+} = Astro.props;
+const canonical = new URL(Astro.url.pathname, Astro.site);
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <script is:inline>document.documentElement.classList.add('js');</script>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <meta name="theme-color" content="#0e0e14" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta name="twitter:card" content="summary" />
+    <script type="application/ld+json" set:html={JSON.stringify({
+      '@context': 'https://schema.org',
+      '@type': 'Person',
+      name: person.name,
+      url: 'https://alicelh.github.io',
+      email: `mailto:${person.email}`,
+      jobTitle: 'Software Engineer',
+      alumniOf: ['Eindhoven University of Technology', 'Zhejiang University'],
+      sameAs: person.links.map((l) => l.href),
+    })} />
+  </head>
+  <body>
+    <slot />
+  </body>
+</html>

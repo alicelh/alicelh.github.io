@@ -1,0 +1,479 @@
+---
+import { Image } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+import Base from '../layouts/Base.astro';
+import Hero from '../components/Hero.astro';
+import Journey from '../components/Journey.astro';
+import Publications from '../components/Publications.astro';
+import {
+  person, now, next, works, themes, recent, visits, talks, awards, skills,
+} from '../data/profile';
+
+const imgs = import.meta.glob<{ default: ImageMetadata }>('../assets/work/*.png', { eager: true });
+const img = (id?: string) => (id ? imgs[`../assets/work/${id}.png`]?.default : undefined);
+const avatar = img('avatar')!;
+const [featured, ...rest] = works;
+---
+
+<Base>
+  <Hero />
+
+  <main>
+    <!-- ── NOW ─────────────────────────────── -->
+    <section class="section wrap" id="now">
+      <div class="section-head reveal">
+        <span class="fig mono">fig. 01 · Now</span>
+        <h2>Building AI tools <em>people</em> actually use.</h2>
+      </div>
+
+      <div class="now-grid">
+        <figure class="portrait reveal">
+          <Image src={avatar} alt="Portrait of Linhao Meng" width={420} height={420} />
+          <figcaption class="mono">fig. 01a — the human in the loop</figcaption>
+        </figure>
+        <div class="now-text reveal">
+          {person.intro.map((p) => <p class="lede">{p}</p>)}
+          <div class="now-cards">
+            {now.map((n, i) => (
+              <article class="now-card">
+                <span class="mono k">{String(i + 1).padStart(2, '0')} — {n.kicker}</span>
+                <h3>{n.title}</h3>
+                <p>{n.body}</p>
+                <div class="chips">{n.tags.map((t) => <span class="chip">{t}</span>)}</div>
+              </article>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <aside class="next reveal">
+        <span class="mono">→ next</span>
+        <h3>{next.title}</h3>
+        <p>{next.body}</p>
+      </aside>
+    </section>
+
+    <!-- ── WORK ────────────────────────────── -->
+    <section class="section wrap" id="work">
+      <div class="section-head reveal">
+        <span class="fig mono">fig. 02 · Work</span>
+        <h2>Data, interaction, and the <em>people</em> in between.</h2>
+      </div>
+      <p class="section-lede reveal">
+        I work where AI meets data and people: tools that let people inspect and evaluate the data and models behind AI, and interfaces that let them question, steer, and work with it. Interactive visualization and user studies are my main methods.
+      </p>
+
+      <div class="themes">
+        {themes.map((t, i) => (
+          <article class="theme reveal">
+            <span class="mono n">{String(i + 1).padStart(2, '0')}</span>
+            <h3>{t.title}</h3>
+            <p>{t.body}</p>
+            <span class="mono where">{t.where}</span>
+          </article>
+        ))}
+      </div>
+
+      <h3 class="sub reveal"><span class="mono">fig. 02a</span> Selected projects</h3>
+
+      <article class="work featured reveal">
+        <div class="shot">
+          <Image src={img(featured.image)!} alt={`${featured.title} overview figure`} widths={[640, 1100]} sizes="(max-width: 900px) 100vw, 640px" />
+        </div>
+        <div class="meta">
+          <span class="mono tag">{featured.year} · {featured.venue}</span>
+          <h3>{featured.title}</h3>
+          <p class="short">{featured.short}</p>
+          <p>{featured.what}</p>
+          <div class="foot">
+            <span class="chip">{featured.role}</span>
+            {featured.links.map((l) => <a class="arrow-link" href={l.href} target="_blank" rel="noopener">{l.label}</a>)}
+          </div>
+        </div>
+      </article>
+
+      <div class="work-grid">
+        {rest.map((w, i) => (
+          <article class="work reveal">
+            {w.image && (
+              <div class="shot">
+                <Image src={img(w.image)!} alt={`${w.title} figure`} widths={[480, 800]} sizes="(max-width: 720px) 100vw, 540px" />
+              </div>
+            )}
+            <div class="meta">
+              <span class="mono tag">{w.year} · {w.venue}</span>
+              <h3>{w.title}</h3>
+              <p class="short">{w.short}</p>
+              <p>{w.what}</p>
+              <div class="foot">
+                <span class="chip">{w.role}</span>
+                {w.links.map((l) => <a class="arrow-link" href={l.href} target="_blank" rel="noopener">{l.label}</a>)}
+              </div>
+            </div>
+          </article>
+        ))}
+      </div>
+
+      <h3 class="sub reveal"><span class="mono">fig. 02b</span> Recent threads</h3>
+      <div class="recent">
+        {recent.map((r) => (
+          <article class="reveal">
+            <span class="mono">{r.venue}</span>
+            <h4>{r.title}</h4>
+            <p>{r.what}</p>
+          </article>
+        ))}
+      </div>
+    </section>
+
+    <!-- ── JOURNEY ─────────────────────────── -->
+    <section class="section wrap" id="journey">
+      <div class="section-head reveal">
+        <span class="fig mono">fig. 03 · Journey</span>
+        <h2>From maps, to models, to <em>makers</em>.</h2>
+      </div>
+      <div class="reveal"><Journey /></div>
+    </section>
+
+    <!-- ── PUBLICATIONS ────────────────────── -->
+    <section class="section wrap" id="publications">
+      <div class="section-head reveal">
+        <span class="fig mono">fig. 04 · Papers</span>
+        <h2>Publications</h2>
+      </div>
+      <div class="reveal"><Publications /></div>
+    </section>
+
+    <!-- ── COMMUNITY + SKILLS ──────────────── -->
+    <section class="section wrap" id="community">
+      <div class="section-head reveal">
+        <span class="fig mono">fig. 05 · Elsewhere</span>
+        <h2>Visits, talks &amp; <em>tools of the trade</em>.</h2>
+      </div>
+      <div class="cols">
+        <div class="reveal">
+          <h3 class="col-h mono">Research visits</h3>
+          <ul class="plain">
+            {visits.map((v) => (
+              <li><span class="mono w">{v.when}</span><span>{v.what}<br /><em>{v.where}</em></span></li>
+            ))}
+          </ul>
+          <h3 class="col-h mono">Talks &amp; service</h3>
+          <ul class="plain">
+            {talks.map((v) => (
+              <li><span class="mono w">{v.when}</span><span>{v.what} — <em>{v.where}</em></span></li>
+            ))}
+          </ul>
+          <h3 class="col-h mono">Awards</h3>
+          <ul class="plain">
+            {awards.map((v) => (
+              <li><span class="mono w">{v.when}</span><span>{v.what}</span></li>
+            ))}
+          </ul>
+        </div>
+        <div class="reveal">
+          {skills.map((g) => (
+            <div class="skill">
+              <h3 class="col-h mono">{g.group}</h3>
+              <div class="chips">{g.items.map((s) => <span class="chip">{s}</span>)}</div>
+            </div>
+          ))}
+          <div class="edu">
+            <h3 class="col-h mono">Education</h3>
+            <ul class="plain">
+              <li><span class="mono w">2020–25</span><span>Ph.D. in Computer Science<br /><em>Eindhoven University of Technology</em></span></li>
+              <li><span class="mono w">2018–20</span><span>M.S.E. in Software Engineering<br /><em>Zhejiang University</em></span></li>
+              <li><span class="mono w">2014–18</span><span>B.S. in Geographic Information Science<br /><em>Zhejiang University</em></span></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ── CONTACT ─────────────────────────── -->
+  <footer class="contact" id="contact">
+    <div class="wrap">
+      <span class="mono k">fig. 06 · Say hello</span>
+      <a class="email" href={`mailto:${person.email}`}>{person.email}</a>
+      <ul class="links">
+        {person.links.map((l) => <li><a class="arrow-link" href={l.href} target="_blank" rel="noopener">{l.label}</a></li>)}
+      </ul>
+      <p class="mono colophon">© {new Date().getFullYear()} Linhao Meng · Built with Astro · The dots up top are a toy, not real data.</p>
+    </div>
+  </footer>
+
+  <script>
+    const io = new IntersectionObserver(
+      (es) => es.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }),
+      { rootMargin: '0px 0px -8% 0px' }
+    );
+    document.querySelectorAll('.reveal').forEach((el) => io.observe(el));
+  </script>
+</Base>
+
+<style>
+  /* NOW */
+  .now-grid {
+    display: grid;
+    grid-template-columns: minmax(220px, 340px) 1fr;
+    gap: clamp(28px, 5vw, 64px);
+    align-items: start;
+  }
+  .portrait { margin: 0; position: sticky; top: 24px; }
+  .portrait img {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1;
+    object-fit: cover;
+    border-radius: 4px;
+    filter: saturate(0.9) contrast(1.02);
+    box-shadow: 0 1px 2px rgba(22, 23, 29, 0.06), 0 12px 32px -12px rgba(22, 23, 29, 0.25);
+  }
+  .portrait figcaption { color: var(--ink-3); margin-top: 32px; }
+  .lede {
+    font-family: var(--serif);
+    font-size: clamp(20px, 2vw, 24px);
+    line-height: 1.45;
+    font-weight: 380;
+    margin: 0 0 18px;
+  }
+  .lede:first-child::first-letter {
+    font-size: 3.3em;
+    float: left;
+    line-height: 0.85;
+    padding: 6px 10px 0 0;
+    color: var(--accent);
+    font-style: italic;
+  }
+  .now-cards {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-top: 32px;
+  }
+  .now-card {
+    background: var(--card);
+    color: var(--ink);
+    border: 1px solid var(--rule);
+    padding: 22px 22px 20px;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+  }
+  .now-card .k { color: var(--accent); font-size: 11px; }
+  .now-card h3 {
+    font-family: var(--serif);
+    font-weight: 400;
+    font-size: 28px;
+    margin: 8px 0 8px;
+    line-height: 1.1;
+  }
+  .now-card p { margin: 0 0 16px; font-size: 15.5px; color: var(--ink-2); }
+  .now-card .chips { margin-top: auto; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .now-card .chip { color: var(--ink-3); }
+
+  .next {
+    margin-top: clamp(40px, 6vw, 72px);
+    padding: clamp(24px, 4vw, 44px);
+    border: 1px solid var(--rule);
+    border-left: 3px solid var(--accent);
+    border-radius: 8px;
+    display: grid;
+    grid-template-columns: 110px 1fr;
+    gap: 6px 24px;
+    background: var(--card);
+  }
+  .next .mono { color: var(--accent); grid-row: span 2; padding-top: 8px; }
+  .next h3 {
+    font-family: var(--serif);
+    font-style: italic;
+    font-weight: 400;
+    font-size: clamp(24px, 3vw, 34px);
+    line-height: 1.15;
+    margin: 0;
+  }
+  .next p { margin: 8px 0 0; max-width: 70ch; color: var(--ink-2); }
+
+  /* WORK */
+  .section-lede {
+    font-family: var(--serif);
+    font-size: clamp(19px, 1.9vw, 23px);
+    line-height: 1.45;
+    max-width: 780px;
+    margin: 0 0 48px 164px;
+    color: var(--ink-2);
+  }
+  .work { display: flex; flex-direction: column; }
+  .work .shot {
+    background: #fff;
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    overflow: hidden;
+    aspect-ratio: 16 / 10;
+    display: grid;
+    place-items: center;
+  }
+  .work .shot img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    transition: transform 0.6s cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+  .work:hover .shot img { transform: scale(1.03); }
+  .work .meta { padding-top: 16px; }
+  .work .tag { color: var(--ink-3); font-size: 11px; }
+  .work h3 {
+    font-family: var(--serif);
+    font-weight: 450;
+    font-size: 27px;
+    line-height: 1.15;
+    margin: 6px 0 2px;
+    letter-spacing: -0.01em;
+  }
+  .work .short {
+    font-family: var(--serif);
+    font-style: italic;
+    color: var(--ink-2);
+    margin: 0 0 8px;
+    font-size: 17px;
+  }
+  .work p { margin: 0 0 14px; color: var(--ink-2); font-size: 15.5px; }
+  .work .foot { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; }
+
+  .featured {
+    display: grid;
+    grid-template-columns: 1.35fr 1fr;
+    gap: clamp(24px, 4vw, 48px);
+    align-items: center;
+    margin-bottom: 64px;
+  }
+  .featured .shot { aspect-ratio: auto; padding: 16px; }
+  .featured h3 { font-size: clamp(32px, 4vw, 46px); }
+  .featured .meta { padding: 0; }
+
+  .themes {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 8px;
+  }
+  .theme {
+    background: var(--card);
+    border: 1px solid var(--rule);
+    border-top: 3px solid var(--accent);
+    border-radius: 8px;
+    padding: 20px 22px 18px;
+    display: flex;
+    flex-direction: column;
+  }
+  .theme .n { color: var(--accent); font-size: 11px; }
+  .theme h3 { font-family: var(--serif); font-weight: 450; font-size: 25px; line-height: 1.15; margin: 6px 0 8px; }
+  .theme p { margin: 0 0 14px; color: var(--ink-2); font-size: 15.5px; }
+  .theme .where { margin-top: auto; color: var(--ink-3); font-size: 10.5px; text-transform: none; letter-spacing: 0.02em; }
+
+  .work-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 48px 32px;
+  }
+
+  .sub {
+    margin: 80px 0 20px;
+    font-family: var(--serif);
+    font-weight: 400;
+    font-size: 30px;
+    display: flex;
+    gap: 16px;
+    align-items: baseline;
+  }
+  .sub .mono { color: var(--ink-3); }
+  .recent {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    border-top: 1px solid var(--ink);
+  }
+  .recent article {
+    padding: 18px 20px 20px 0;
+    border-right: 1px solid var(--rule);
+    margin-right: 20px;
+  }
+  .recent article:last-child { border-right: 0; margin-right: 0; }
+  .recent .mono { color: var(--accent); font-size: 10.5px; }
+  .recent h4 { font-family: var(--serif); font-weight: 450; font-size: 20px; line-height: 1.2; margin: 8px 0; }
+  .recent p { margin: 0; font-size: 14.5px; color: var(--ink-2); }
+
+  /* COMMUNITY */
+  .cols { display: grid; grid-template-columns: 1.2fr 1fr; gap: clamp(32px, 6vw, 80px); }
+  .col-h { color: var(--ink-3); margin: 0 0 12px; font-weight: 400; }
+  .plain { list-style: none; padding: 0; margin: 0 0 36px; }
+  .plain li {
+    display: grid;
+    grid-template-columns: 110px 1fr;
+    gap: 16px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--rule);
+    font-size: 15.5px;
+  }
+  .plain .w { color: var(--ink-3); font-size: 11px; padding-top: 3px; }
+  .plain em { color: var(--ink-2); }
+  .skill { margin-bottom: 28px; }
+  .skill .chip { font-size: 12px; padding: 5px 11px; }
+
+  /* CONTACT */
+  .contact {
+    margin-top: clamp(96px, 12vw, 160px);
+    background: var(--night);
+    color: #f1eee8;
+    padding: clamp(64px, 9vw, 120px) 0 36px;
+  }
+  .contact .k { color: var(--cyan); }
+  .email {
+    display: block;
+    font-family: var(--serif);
+    font-style: italic;
+    font-weight: 350;
+    font-size: clamp(34px, 7.5vw, 104px);
+    line-height: 1;
+    letter-spacing: -0.035em;
+    margin: 18px 0 36px;
+    text-decoration: none;
+    word-break: break-all;
+    background: linear-gradient(90deg, #f1eee8, #f1eee8) 0 100% / 0 3px no-repeat;
+    transition: background-size 0.4s, color 0.2s;
+    width: fit-content;
+    max-width: 100%;
+  }
+  .email:hover { color: var(--pink-soft); background-size: 100% 3px; }
+  .links { display: flex; flex-wrap: wrap; gap: 14px 28px; list-style: none; padding: 0; margin: 0 0 72px; }
+  .links .arrow-link { font-size: 13px; color: #d9d5de; }
+  .links .arrow-link:hover { color: var(--pink-soft); }
+  .colophon { color: #6f6b7b; font-size: 10.5px; margin: 0; border-top: 1px solid #2a2936; padding-top: 18px; text-transform: none; letter-spacing: 0.02em; }
+
+  @media (max-width: 1000px) {
+    .work-grid { grid-template-columns: 1fr 1fr; }
+    .recent { grid-template-columns: 1fr 1fr; }
+    .recent article:nth-child(2) { border-right: 0; margin-right: 0; }
+    .section-lede { margin-left: 0; }
+  }
+  @media (max-width: 900px) {
+    .themes { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 800px) {
+    .now-grid { grid-template-columns: 1fr; }
+    .portrait { position: static; max-width: 260px; }
+    .now-cards { grid-template-columns: 1fr; }
+    .featured { grid-template-columns: 1fr; }
+    .cols { grid-template-columns: 1fr; }
+    .next { grid-template-columns: 1fr; }
+    .next .mono { grid-row: auto; padding: 0; }
+  }
+  @media (max-width: 600px) {
+    .work-grid { grid-template-columns: 1fr; }
+    .recent { grid-template-columns: 1fr; }
+    .recent article { border-right: 0; margin-right: 0; border-bottom: 1px solid var(--rule); }
+    .plain li { grid-template-columns: 76px 1fr; gap: 10px; }
+    body { font-size: 16px; }
+  }
+</style>

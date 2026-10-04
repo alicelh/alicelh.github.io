@@ -1,0 +1,632 @@
+---
+import { person, stats } from '../data/profile';
+const nav = [
+  { href: '#now', label: 'Now' },
+  { href: '#work', label: 'Work' },
+  { href: '#journey', label: 'Journey' },
+  { href: '#publications', label: 'Papers' },
+  { href: '#contact', label: 'Contact' },
+];
+---
+
+<header class="hero" id="top">
+  <canvas class="field" aria-hidden="true"></canvas>
+  <p class="kicker mono fig-label">fig. 00 — <span class="alpha-readout nocase">α = 0.00</span></p>
+
+  <nav class="topbar wrap" aria-label="Main">
+    <a class="mark" href="#top" aria-label="Linhao Meng, home">LM<span>.</span></a>
+    <ul>
+      {nav.map((n) => <li><a href={n.href}>{n.label}</a></li>)}
+    </ul>
+  </nav>
+
+  <div class="hero-body wrap">
+    <h1>
+      <span class="first">Linhao</span>
+      <span class="last">Meng</span>
+    </h1>
+    <p class="tagline">{person.tagline}</p>
+    <ul class="roles mono">
+      {person.roles.map((r) => <li>{r}</li>)}
+      <li>{person.location}</li>
+    </ul>
+  </div>
+
+  <div class="hero-foot wrap">
+    <dl class="stats">
+      {stats.map((s) => (
+        <div>
+          <dt class="mono">{s.label}</dt>
+          <dd>{s.value}</dd>
+        </div>
+      ))}
+    </dl>
+
+    <div class="alpha-control">
+      <label for="alpha" class="mono">
+        <span>what the work is</span>
+        <span class="alpha-name nocase">α</span>
+        <span>how people split it with AI</span>
+      </label>
+      <input id="alpha" type="range" min="0" max="1" step="0.01" value="0" aria-describedby="alpha-cap" />
+      <div class="colour-by" role="group" aria-label="Colour dots by">
+        <span class="mono">colour by</span>
+        <button type="button" data-c="mode" aria-pressed="true">collaboration mode</button>
+        <button type="button" data-c="topic" aria-pressed="false">topic</button>
+        <button type="button" data-c="occ" aria-pressed="false">occupation</button>
+      </div>
+      <p class="caption" id="alpha-cap">
+        1,017 kinds of work people brought to Claude in Feb 2026. Slide α from <em>what the work is</em> to <em>how people split it with AI</em>: handing it over (warm) or working alongside it (cool). Dot size = conversations. Laid out with my <a href="#work">Class&#8209;Constrained t&#8209;SNE</a>.
+      </p>
+      <p class="source mono">Data: <a href="https://huggingface.co/datasets/Anthropic/EconomicIndex" target="_blank" rel="noopener">Anthropic Economic Index</a> (2026-03 release, MIT) · topics clustered from task text · occupations: O*NET via the 2025-03 release · <span class="hint">hover or tap a dot</span></p>
+    </div>
+  </div>
+  <div class="tip-card" role="status" aria-live="polite" hidden>
+    <span class="mono tip-k"></span>
+    <q class="tip-q"></q>
+    <ol class="tip-bars"></ol>
+    <p class="tip-ask mono"></p>
+  </div>
+</header>
+
+<script>
+  type Cls = { id: string; group: string; desc: string };
+  type Pt = { t: string; p: number[]; n: number; s: number | null; d: number; g: number; o: string; xy: number[]; top?: number; r?: number };
+  type Data = { alphas: number[]; classes: Cls[]; domains: string[]; groups: string[]; anchors: number[][][]; points: Pt[] };
+
+  const hero = document.querySelector<HTMLElement>('.hero')!;
+  const canvas = hero.querySelector<HTMLCanvasElement>('canvas.field')!;
+  const ctx = canvas.getContext('2d')!;
+  const slider = hero.querySelector<HTMLInputElement>('#alpha')!;
+  const readout = hero.querySelector<HTMLElement>('.alpha-readout')!;
+  const figLabel = hero.querySelector<HTMLElement>('.fig-label')!;
+  const tip = hero.querySelector<HTMLElement>('.tip-card')!;
+  const tipK = tip.querySelector<HTMLElement>('.tip-k')!;
+  const tipQ = tip.querySelector<HTMLElement>('.tip-q')!;
+  const tipBars = tip.querySelector<HTMLElement>('.tip-bars')!;
+  const tipAsk = tip.querySelector<HTMLElement>('.tip-ask')!;
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // warm = automation (directive, feedback loop) · cool = augmentation (task iteration, validation, learning)
+  const COLORS = ['#ff4f9a', '#f2b635', '#35c6dc', '#5fce84', '#a78bfa'];
+  const rgb = COLORS.map((h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16)));
+  // topics: Ward clustering (k = 7) of the task-text embeddings, named by their most distinctive words
+  const DCOLORS = ['#f472b6', '#f59e0b', '#22d3ee', '#60a5fa', '#a3e635', '#f87171', '#c084fc'];
+  const drgb = DCOLORS.map((h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16)));
+  // occupation groups: O*NET occupation → SOC major group, merged into 6 + other
+  const GCOLORS = ['#60a5fa', '#f59e0b', '#34d399', '#f87171', '#22d3ee', '#c084fc', '#6b7280'];
+  const grgb = GCOLORS.map((h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16)));
+  type CB = 'mode' | 'topic' | 'occ';
+  let colourBy: CB = 'mode';
+  const PW = { mode: 1, topic: 0, occ: 0 }; // palette weights, eased toward the selected option
+  const GREY = [140, 140, 160];
+
+  let data: Data | null = null;
+  let W = 0, H = 0, dpr = 1;
+  let box = { cx: 0, cy: 0, sx: 1, sy: 1 };
+  let alpha = 0, target = 0, t = 0;
+  let pos: Float32Array = new Float32Array(0); // current screen positions
+  let hover = -1, demo = -1, touched = false;
+  let running = false, visible = true;
+  const mobile = () => W < 760;
+
+  function layout() {
+    const m = mobile();
+    const x0 = m ? W * 0.04 : W * 0.44, x1 = W * 0.97;
+    const y0 = m ? 70 : H * 0.1;
+    const y1 = m ? Math.min(H * 0.6, window.innerHeight * 0.44) : H * 0.72;
+    const rw = (x1 - x0) / 2, rh = (y1 - y0) / 2;
+    const sy = rh / 1.25, sx = Math.min(rw / 1.25, sy * 1.7);
+    box = { cx: (x0 + x1) / 2, cy: (y0 + y1) / 2, sx, sy };
+    placeFigLabel();
+  }
+
+  // fixed spot for the "fig. 00" caption: above the top-right of the area the cloud covers across all α
+  function placeFigLabel() {
+    if (!data) return;
+    let mxx = -Infinity, mny = Infinity;
+    for (const p of data.points) for (let j = 0; j < p.xy.length; j += 2) {
+      if (p.xy[j] > mxx) mxx = p.xy[j];
+      if (p.xy[j + 1] < mny) mny = p.xy[j + 1];
+    }
+    const x = box.cx + (mxx / 1000) * box.sx, y = box.cy + (mny / 1000) * box.sy;
+    const right = Math.min(W - 16, x);
+    figLabel.style.transform = `translate(${Math.round(right - figLabel.offsetWidth)}px, ${Math.round(Math.max(76, y - 30))}px)`;
+  }
+
+  function resize() {
+    const r = hero.getBoundingClientRect();
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    W = r.width; H = r.height;
+    canvas.width = W * dpr; canvas.height = H * dpr;
+    canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    layout();
+    draw();
+  }
+
+  const ease = (x: number) => x * x * (3 - 2 * x);
+
+  function frameAt(a: number) {
+    const n = data!.alphas.length - 1;
+    const f = Math.min(a * n, n - 1e-6);
+    const i = Math.floor(f);
+    return { i, k: f - i };
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    if (!data) return;
+    const { i, k } = frameAt(alpha);
+    const a = ease(alpha);
+    const pts = data.points;
+    if (pos.length !== pts.length * 2) pos = new Float32Array(pts.length * 2);
+    const wD = PW.topic, wG = PW.occ;
+    const sx: number[][] = [], sy: number[][] = [], gx: number[][] = [], gy: number[][] = [];
+    const r0 = mobile() ? 1.6 : 2.1;
+
+    // anchors (collaboration modes)
+    const A0 = data.anchors[i], A1 = data.anchors[i + 1];
+    const ax = (j: number) => box.cx + ((A0[j][0] + (A1[j][0] - A0[j][0]) * k) / 1000) * box.sx;
+    const ay = (j: number) => box.cy + ((A0[j][1] + (A1[j][1] - A0[j][1]) * k) / 1000) * box.sy;
+
+    const focus = hover >= 0 ? hover : demo;
+    // links from the focused task to each collaboration mode, weighted by share
+    if (focus >= 0) {
+      const p = pts[focus];
+      const fx = box.cx + ((p.xy[i * 2] + (p.xy[i * 2 + 2] - p.xy[i * 2]) * k) / 1000) * box.sx;
+      const fy = box.cy + ((p.xy[i * 2 + 1] + (p.xy[i * 2 + 3] - p.xy[i * 2 + 1]) * k) / 1000) * box.sy;
+      p.p.forEach((v, j) => {
+        if (v < 5) return;
+        ctx.strokeStyle = `rgba(${rgb[j].join(',')},${0.15 + (v / 100) * 0.8})`;
+        ctx.lineWidth = 0.6 + (v / 100) * 2.4;
+        ctx.beginPath(); ctx.moveTo(fx, fy); ctx.lineTo(ax(j), ay(j)); ctx.stroke();
+      });
+    }
+
+    for (let n = 0; n < pts.length; n++) {
+      const p = pts[n];
+      const wob = reduce ? 0 : 1;
+      let x = box.cx + ((p.xy[i * 2] + (p.xy[i * 2 + 2] - p.xy[i * 2]) * k) / 1000) * box.sx + Math.sin(t * 0.8 + n) * 0.9 * wob;
+      let y = box.cy + ((p.xy[i * 2 + 1] + (p.xy[i * 2 + 3] - p.xy[i * 2 + 1]) * k) / 1000) * box.sy + Math.cos(t * 0.6 + n * 1.3) * 0.9 * wob;
+      pos[n * 2] = x; pos[n * 2 + 1] = y;
+      const conf = Math.max(...p.p);
+      const mc = rgb[p.top!], dc = drgb[p.d], gc = grgb[p.g];
+      const col = [0, 1, 2].map((c) => mc[c] * PW.mode + dc[c] * wD + gc[c] * wG);
+      const kk = n === focus ? 1 : focus >= 0 ? 0.45 : 0.9;
+      const cr = Math.round(GREY[0] + (col[0] - GREY[0]) * kk);
+      const cg = Math.round(GREY[1] + (col[1] - GREY[1]) * kk);
+      const cb = Math.round(GREY[2] + (col[2] - GREY[2]) * kk);
+      if (wD > 0.02) { (sx[p.d] ||= []).push(x); (sy[p.d] ||= []).push(y); }
+      if (wG > 0.02) { (gx[p.g] ||= []).push(x); (gy[p.g] ||= []).push(y); }
+      const op = focus >= 0 && n !== focus ? 0.3 : 0.4 + 0.55 * Math.min(1, (conf - 25) / 50);
+      ctx.beginPath();
+      ctx.fillStyle = `rgba(${cr},${cg},${cb},${op})`;
+      ctx.arc(x, y, r0 * p.r!, 0, Math.PI * 2);
+      ctx.fill();
+      if (n === focus) {
+        ctx.beginPath();
+        ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5;
+        ctx.arc(x, y, r0 * p.r! + 5, 0, Math.PI * 2); ctx.stroke();
+      }
+    }
+
+    // topic / occupation-group labels at the median position of their dots
+    const groupLabels = (names: string[], X: number[][], Y: number[][], cols: number[][], w: number) => {
+      if (w <= 0.02) return;
+      ctx.font = `italic ${mobile() ? 13 : 16}px "Fraunces Variable", Georgia, serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      const med = (v: number[]) => { const q = [...v].sort((a, b) => a - b); return q[q.length >> 1]; };
+      names.forEach((nm, j) => {
+        if (nm === 'Other' || !X[j] || X[j].length < 20) return;
+        const x = med(X[j]), y = med(Y[j]);
+        ctx.lineWidth = 4; ctx.strokeStyle = `rgba(14,14,20,${0.8 * w})`;
+        ctx.strokeText(nm, x, y);
+        ctx.fillStyle = `rgba(${cols[j].join(',')},${w})`;
+        ctx.fillText(nm, x, y);
+      });
+      ctx.textAlign = 'left';
+    };
+    groupLabels(data.domains, sx, sy, drgb, wD);
+    groupLabels(data.groups, gx, gy, grgb, wG);
+
+    // mode labels
+    ctx.font = `${mobile() ? 10 : 11.5}px "JetBrains Mono Variable", ui-monospace, monospace`;
+    ctx.textBaseline = 'middle';
+    data.classes.forEach((tl, j) => {
+      const x = ax(j), y = Math.min(Math.max(ay(j), 70), H * (mobile() ? 0.62 : 0.8));
+      const label = tl.id;
+      const w = ctx.measureText(label).width + 14;
+      const o = (0.35 + 0.65 * a) * (1 - 0.7 * (wD + wG));
+      ctx.fillStyle = `rgba(14,14,20,${0.75 * o + 0.1})`;
+      ctx.strokeStyle = `rgba(${rgb[j].join(',')},${o})`;
+      ctx.lineWidth = 1;
+      const lx = Math.min(Math.max(x - w / 2, 4), W - w - 4), ly = y - 11 - 20 * a;
+      ctx.beginPath();
+      ctx.roundRect(lx, ly, w, 22, 11);
+      ctx.fill(); ctx.stroke();
+      ctx.fillStyle = `rgba(${rgb[j].join(',')},${Math.min(1, o + 0.15)})`;
+      ctx.fillText(label, lx + 7, ly + 11.5);
+    });
+  }
+
+  function showTip(n: number, fromDemo = false) {
+    if (!data || n < 0) { tip.hidden = true; return; }
+    const p = data.points[n];
+    const order = p.p.map((v, j) => [v, j]).sort((a, b) => b[0] - a[0]);
+    const auto = p.p[0] + p.p[1];
+    const [lc, ln] =
+      colourBy === 'topic' ? [DCOLORS[p.d], data.domains[p.d]]
+      : colourBy === 'occ' ? [GCOLORS[p.g], data.groups[p.g]]
+      : [COLORS[p.top!], data.classes[p.top!].id];
+    tipK.innerHTML = `<span style="color:${lc}">● ${ln}</span> · ${p.o} · ${p.n.toLocaleString('en')} conversations${fromDemo ? ' · auto-tour' : ''}`;
+    tipQ.textContent = p.t;
+    tipBars.innerHTML = order
+      .map(([v, j]) => `<li><span class="nm" style="color:${COLORS[j]}">${data!.classes[j].id}</span><span class="bar"><i style="width:${v}%;background:${COLORS[j]}"></i></span><span class="pc">${v}%</span></li>`)
+      .join('');
+    tipAsk.textContent = `↳ ${auto}% handed to AI · ${100 - auto}% done with AI` + (p.s != null ? ` · ${p.s}% judged successful` : '');
+    tipAsk.classList.toggle('warn', auto >= 50);
+    tip.hidden = false;
+    const x = pos[n * 2], y = pos[n * 2 + 1];
+    const tw = tip.offsetWidth, th = tip.offsetHeight;
+    let left = x + 18, top = y - th / 2;
+    if (left + tw > W - 12) left = x - tw - 18;
+    if (mobile()) { left = Math.max(12, Math.min(W - tw - 12, x - tw / 2)); top = y + 18; }
+    top = Math.max(64, Math.min(top, H - th - 12));
+    tip.style.transform = `translate(${Math.round(left)}px, ${Math.round(top)}px)`;
+  }
+
+  function nearest(mx: number, my: number) {
+    if (!data) return -1;
+    let best = -1, bd = mobile() ? 22 * 22 : 14 * 14;
+    for (let n = 0; n < data.points.length; n++) {
+      const dx = pos[n * 2] - mx, dy = pos[n * 2 + 1] - my, d = dx * dx + dy * dy;
+      if (d < bd) { bd = d; best = n; }
+    }
+    return best;
+  }
+
+  function setAlpha(v: number) {
+    alpha = v;
+    slider.value = String(v);
+    readout.textContent = `α = ${v.toFixed(2)}`;
+    slider.style.setProperty('--fill', `${v * 100}%`);
+  }
+
+  function loop() {
+    if (!visible) { running = false; return; }
+    running = true;
+    t += 0.016;
+    if (Math.abs(target - alpha) > 0.001) setAlpha(alpha + (target - alpha) * 0.04);
+    (['mode', 'topic', 'occ'] as CB[]).forEach((c) => {
+      const tw = colourBy === c ? 1 : 0;
+      PW[c] = Math.abs(tw - PW[c]) > 0.001 ? PW[c] + (tw - PW[c]) * 0.12 : tw;
+    });
+    draw();
+    const f = hover >= 0 ? hover : demo;
+    if (f >= 0) showTip(f, hover < 0);
+    requestAnimationFrame(loop);
+  }
+  const kick = () => { if (!running && visible) requestAnimationFrame(loop); };
+  const redrawStatic = () => { draw(); const f = hover >= 0 ? hover : demo; showTip(f, hover < 0); };
+
+  // an auto-tour through ambiguous requests until the visitor takes over
+  let tourTimer = 0;
+  function tour() {
+    if (!data || touched || mobile()) return;
+    // tour through the most common kinds of work
+    const amb = data.points.map((p, n) => [p.n, n]).sort((a, b) => b[0] - a[0]).slice(0, 120).map(([, n]) => n);
+    demo = amb[Math.floor(Math.random() * amb.length)];
+    if (reduce) redrawStatic();
+    tourTimer = window.setTimeout(tour, 4200);
+  }
+  function stopTour() {
+    touched = true; clearTimeout(tourTimer);
+    if (demo >= 0) { demo = -1; if (hover < 0) tip.hidden = true; }
+  }
+
+  const cbtn = hero.querySelectorAll<HTMLButtonElement>('.colour-by button');
+  cbtn.forEach((b) =>
+    b.addEventListener('click', () => {
+      colourBy = b.dataset.c as CB;
+      cbtn.forEach((o) => o.setAttribute('aria-pressed', String(o === b)));
+      if (reduce) { (['mode', 'topic', 'occ'] as CB[]).forEach((c) => { PW[c] = colourBy === c ? 1 : 0; }); redrawStatic(); }
+    })
+  );
+
+  slider.addEventListener('input', () => {
+    stopTour();
+    target = parseFloat(slider.value);
+    setAlpha(target);
+    if (reduce) redrawStatic();
+  });
+  canvas.addEventListener('pointermove', (e) => {
+    const r = hero.getBoundingClientRect();
+    const n = nearest(e.clientX - r.left, e.clientY - r.top);
+    if (n >= 0) stopTour();
+    hover = n;
+    canvas.style.cursor = n >= 0 ? 'pointer' : 'default';
+    if (n < 0 && demo < 0) tip.hidden = true;
+    if (reduce) redrawStatic();
+  });
+  canvas.addEventListener('pointerdown', (e) => {
+    const r = hero.getBoundingClientRect();
+    const n = nearest(e.clientX - r.left, e.clientY - r.top);
+    stopTour();
+    hover = n;
+    if (n < 0) tip.hidden = true;
+    if (reduce) redrawStatic();
+  });
+  hero.addEventListener('pointerleave', () => {
+    hover = -1;
+    if (demo < 0) tip.hidden = true;
+    if (reduce) redrawStatic();
+  });
+
+  new IntersectionObserver(([e]) => {
+    visible = e.isIntersecting;
+    if (visible && !reduce) kick();
+  }).observe(hero);
+
+  let rt = 0;
+  window.addEventListener('resize', () => { clearTimeout(rt); rt = window.setTimeout(resize, 120); });
+
+  resize();
+  fetch('/hero-data.json')
+    .then((r) => r.json())
+    .then((d: Data) => {
+      // colour = the tool the router is most confident in (argmax), not the dataset label
+      d.points.forEach((p) => {
+        p.top = p.p.indexOf(Math.max(...p.p));
+        p.r = 0.75 + 0.4 * Math.log10(p.n / 100); // dot size ~ number of conversations
+      });
+      data = d;
+      placeFigLabel();
+      pos = new Float32Array(d.points.length * 2);
+      if (reduce) { setAlpha(0.6); redrawStatic(); }
+      else {
+        setAlpha(0);
+        setTimeout(() => { target = 0.6; }, 600);
+        kick();
+      }
+      setTimeout(tour, 3600);
+    })
+    .catch(() => {});
+</script>
+
+<style>
+  .hero {
+    position: relative;
+    background: radial-gradient(120% 90% at 75% 40%, #1b1b2a 0%, var(--night) 60%);
+    color: #f1eee8;
+    min-height: min(100svh, 980px);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    isolation: isolate;
+  }
+  .field {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    touch-action: pan-y;
+  }
+
+  .topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 22px;
+    padding-bottom: 22px;
+    width: 100%;
+  }
+  .mark {
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 26px;
+    text-decoration: none;
+    letter-spacing: -0.02em;
+  }
+  .mark span { color: var(--magenta); }
+  .topbar ul {
+    display: flex;
+    gap: clamp(14px, 2.5vw, 32px);
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .topbar a:not(.mark) {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    text-decoration: none;
+    color: #bdb9c7;
+    transition: color 0.15s;
+  }
+  .topbar a:not(.mark):hover { color: #fff; }
+
+  .hero-body {
+    width: 100%;
+    margin-top: clamp(24px, 6vh, 80px);
+    pointer-events: none;
+  }
+  .hero-body > * { pointer-events: auto; max-width: 620px; }
+  .kicker { color: var(--cyan); margin: 0; font-size: 11px; }
+  .fig-label { position: absolute; left: 0; top: 0; z-index: 1; pointer-events: none; }
+  h1 {
+    font-family: var(--serif);
+    font-weight: 350;
+    font-size: clamp(64px, 12vw, 164px);
+    line-height: 0.86;
+    letter-spacing: -0.045em;
+    margin: 0 0 28px;
+    font-variation-settings: 'opsz' 144;
+  }
+  h1 span { display: block; }
+  h1 .last {
+    font-style: italic;
+    padding-left: 0.5em;
+    color: transparent;
+    -webkit-text-stroke: 1.5px #f1eee8;
+  }
+  .tagline {
+    font-family: var(--serif);
+    font-size: clamp(20px, 2.2vw, 26px);
+    line-height: 1.35;
+    font-weight: 380;
+    margin: 0 0 22px;
+    color: #e6e2dc;
+    text-wrap: balance;
+  }
+  .roles {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 18px;
+    color: #a9a5b4;
+  }
+  .roles li::before { content: '▸ '; color: var(--magenta); }
+
+  .hero-foot {
+    width: 100%;
+    margin-top: auto;
+    padding-top: 28px;
+    padding-bottom: 28px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 32px;
+  }
+  .stats {
+    display: flex;
+    gap: clamp(20px, 4vw, 48px);
+    margin: 0;
+  }
+  .stats div { display: flex; flex-direction: column-reverse; }
+  .stats dd {
+    margin: 0;
+    font-family: var(--serif);
+    font-size: clamp(32px, 4vw, 48px);
+    line-height: 1;
+    font-variation-settings: 'opsz' 144;
+  }
+  .stats dt { color: #8f8b9b; font-size: 10.5px; margin-top: 6px; max-width: 22ch; }
+
+  .alpha-control {
+    width: min(400px, 100%);
+    background: rgba(14, 14, 20, 0.72);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    border: 1px solid #2d2c3a;
+    border-radius: 10px;
+    padding: 14px 16px 12px;
+  }
+  .alpha-control label {
+    display: flex;
+    justify-content: space-between;
+    color: #8f8b9b;
+    font-size: 10.5px;
+    margin-bottom: 6px;
+  }
+  .alpha-name { color: #f1eee8; }
+  .nocase { text-transform: none; }
+  input[type='range'] {
+    --fill: 0%;
+    width: 100%;
+    appearance: none;
+    -webkit-appearance: none;
+    background: transparent;
+    height: 22px;
+    cursor: pointer;
+    margin: 0;
+  }
+  input[type='range']::-webkit-slider-runnable-track {
+    height: 3px;
+    border-radius: 3px;
+    background: linear-gradient(90deg, var(--magenta) var(--fill), #3a3948 var(--fill));
+  }
+  input[type='range']::-moz-range-track {
+    height: 3px;
+    border-radius: 3px;
+    background: linear-gradient(90deg, var(--magenta) var(--fill), #3a3948 var(--fill));
+  }
+  input[type='range']::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #f1eee8;
+    border: 3px solid var(--magenta);
+    margin-top: -7.5px;
+  }
+  input[type='range']::-moz-range-thumb {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #f1eee8;
+    border: 3px solid var(--magenta);
+  }
+  .caption {
+    margin: 8px 0 0;
+    font-size: 12.5px;
+    line-height: 1.5;
+    color: #a9a5b4;
+  }
+  .caption em { color: #f1eee8; font-style: normal; }
+  .colour-by { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin: 10px 0 2px; }
+  .colour-by .mono { color: #8f8b9b; font-size: 10px; margin-right: 2px; }
+  .colour-by button {
+    font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.03em;
+    padding: 4px 10px; border-radius: 999px; cursor: pointer;
+    border: 1px solid #3a3948; background: transparent; color: #bdb9c7;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+  }
+  .colour-by button:hover { border-color: #8f8b9b; color: #f1eee8; }
+  .colour-by button[aria-pressed='true'] { background: #f1eee8; border-color: #f1eee8; color: #0e0e14; }
+  .ring {
+    display: inline-block; width: 9px; height: 9px; border-radius: 50%;
+    border: 1.3px solid #f1eee8; vertical-align: -0.5px; margin-right: 2px;
+  }
+  .source { color: #6f6b7b; font-size: 9.5px; margin: 8px 0 0; text-transform: none; letter-spacing: 0.02em; }
+  .hint { color: var(--cyan); }
+
+  .tip-card {
+    position: absolute; left: 0; top: 0; z-index: 3;
+    width: min(320px, calc(100vw - 24px));
+    background: rgba(14, 14, 20, 0.92);
+    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    border: 1px solid #34334a;
+    border-radius: 10px;
+    padding: 12px 14px;
+    pointer-events: none;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+  }
+  .tip-card[hidden] { display: none; }
+  .tip-k { color: #8f8b9b; font-size: 10px; }
+  .tip-q {
+    display: block; margin: 4px 0 10px;
+    font-family: var(--serif); font-size: 17px; line-height: 1.35; color: #f6f3ee;
+    quotes: '“' '”';
+  }
+  .tip-bars { list-style: none; margin: 0; padding: 0; display: grid; gap: 5px; }
+  .tip-bars :global(li) { display: grid; grid-template-columns: 108px 1fr 36px; gap: 8px; align-items: center; font-family: var(--mono); font-size: 11px; }
+  .tip-bars :global(.bar) { height: 5px; background: #2a2938; border-radius: 3px; overflow: hidden; }
+  .tip-bars :global(.bar i) { display: block; height: 100%; border-radius: 3px; }
+  .tip-bars :global(.pc) { color: #bdb9c7; text-align: right; }
+  .tip-ask { margin: 10px 0 0; font-size: 10.5px; color: #8fd9a8; text-transform: none; letter-spacing: 0.02em; }
+  .tip-ask.warn { color: #ff8fbf; }
+  .source a { color: inherit; }
+  .caption a { color: var(--cyan); }
+
+  @media (max-width: 760px) {
+    .topbar ul { display: none; }
+    .hero { min-height: auto; }
+    .hero-body { margin-top: 44vh; }
+    .hero-foot { flex-direction: column; align-items: stretch; }
+    h1 .last { -webkit-text-stroke-width: 1px; }
+  }
+</style>

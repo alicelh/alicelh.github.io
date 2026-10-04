@@ -1,0 +1,15 @@
+---
+import Base from '../layouts/Base.astro';
+---
+<Base title="Not found — Linhao Meng">
+  <main class="nf">
+    <p class="mono">fig. 404 — an outlier</p>
+    <h1>This point doesn’t belong to any cluster.</h1>
+    <a class="arrow-link" href="/">Back to the main page</a>
+  </main>
+</Base>
+<style>
+  .nf { min-height: 100svh; display: grid; place-content: center; padding: 0 var(--gutter); text-align: center; background: var(--night); color: #f1eee8; }
+  .nf .mono { color: var(--cyan); }
+  h1 { font-family: var(--serif); font-weight: 350; font-style: italic; font-size: clamp(34px, 6vw, 72px); line-height: 1.05; max-width: 16ch; margin: 12px auto 28px; }
+</style>

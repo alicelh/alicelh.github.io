@@ -1,0 +1,130 @@
+---
+import { publications } from '../data/profile';
+const md = (s: string) => s.replace(/\*\*(.+?)\*\*/g, '<b>$1</b>');
+const filters = [
+  { id: 'all', label: 'All' },
+  { id: 'first', label: 'First author' },
+  { id: 'journal', label: 'Journal' },
+  { id: 'conference', label: 'Conference & workshop' },
+];
+const total = publications.filter((p) => p.year !== 'review').length;
+---
+
+<div class="pubs">
+  <div class="bar">
+    <div class="filters" role="group" aria-label="Filter publications">
+      {filters.map((f, i) => (
+        <button type="button" data-f={f.id} aria-pressed={i === 0 ? 'true' : 'false'}>{f.label}</button>
+      ))}
+    </div>
+    <p class="mono count"><span class="n">{publications.length}</span> shown · {total} published + 1 under review</p>
+  </div>
+
+  <ol class="list">
+    {publications.map((p) => (
+      <li data-first={p.first ? '1' : '0'} data-kind={p.kind}>
+        <span class="yr mono">{p.year === 'review' ? 'In review' : p.year}</span>
+        <div class="body">
+          <h3>
+            {p.link ? <a href={p.link} target="_blank" rel="noopener">{p.title}</a> : p.title}
+          </h3>
+          <p class="authors" set:html={md(p.authors)} />
+          <p class="venue">{p.venue}</p>
+        </div>
+        <span class="tags">
+          {p.first && <span class="chip first">1st author</span>}
+        </span>
+      </li>
+    ))}
+  </ol>
+  <p class="more">
+    <a class="arrow-link" href="https://scholar.google.com/citations?user=vv6CYB0AAAAJ&hl=en" target="_blank" rel="noopener">Google Scholar profile</a>
+  </p>
+</div>
+
+<script>
+  const root = document.querySelector<HTMLElement>('.pubs')!;
+  const btns = root.querySelectorAll<HTMLButtonElement>('button[data-f]');
+  const items = root.querySelectorAll<HTMLLIElement>('.list li');
+  const n = root.querySelector<HTMLElement>('.n')!;
+  btns.forEach((b) =>
+    b.addEventListener('click', () => {
+      btns.forEach((o) => o.setAttribute('aria-pressed', String(o === b)));
+      const f = b.dataset.f;
+      let shown = 0;
+      items.forEach((li) => {
+        const k = li.dataset.kind;
+        const ok =
+          f === 'all' ||
+          (f === 'first' && li.dataset.first === '1') ||
+          (f === 'journal' && k === 'journal') ||
+          (f === 'conference' && (k === 'conference' || k === 'workshop'));
+        li.hidden = !ok;
+        if (ok) shown++;
+      });
+      n.textContent = String(shown);
+    })
+  );
+</script>
+
+<style>
+  .bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  .filters { display: flex; flex-wrap: wrap; gap: 8px; }
+  button {
+    font: inherit;
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.03em;
+    padding: 7px 14px;
+    border-radius: 999px;
+    border: 1px solid var(--ink);
+    background: transparent;
+    color: var(--ink);
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+  }
+  button:hover { background: var(--paper-2); }
+  button[aria-pressed='true'] { background: var(--ink); color: var(--paper); }
+  .count { color: var(--ink-3); margin: 0; }
+
+  .list { list-style: none; padding: 0; margin: 0; }
+  .list li {
+    display: grid;
+    grid-template-columns: 110px 1fr auto;
+    gap: 20px;
+    padding: 20px 0;
+    border-bottom: 1px solid var(--rule);
+    align-items: start;
+  }
+  .yr { color: var(--ink-3); padding-top: 5px; }
+  h3 {
+    font-family: var(--serif);
+    font-weight: 450;
+    font-size: 21px;
+    line-height: 1.3;
+    margin: 0 0 6px;
+    letter-spacing: -0.005em;
+  }
+  h3 a { text-decoration: none; background-image: linear-gradient(var(--accent), var(--accent)); background-size: 0 1px; background-repeat: no-repeat; background-position: 0 100%; transition: background-size 0.25s; }
+  h3 a:hover { background-size: 100% 1px; }
+  h3 a::after { content: ' ↗'; font-size: 0.7em; color: var(--ink-3); }
+  .authors { margin: 0; color: var(--ink-2); font-size: 15px; }
+  .authors :global(b) { color: var(--ink); font-weight: 600; }
+  .venue { margin: 2px 0 0; font-size: 14.5px; font-style: italic; color: var(--ink-2); }
+  .chip.first { color: var(--accent); }
+  .more { margin-top: 24px; }
+
+  @media (max-width: 720px) {
+    .list li { grid-template-columns: 1fr; gap: 4px; }
+    .yr { padding: 0; }
+    .tags { order: -1; }
+    .tags:empty { display: none; }
+  }
+</style>

@@ -1,0 +1,222 @@
+---
+import { lanes, spans, marks } from '../data/profile';
+
+const START = 2014.5;
+const END = 2027;
+const W = 1100;
+const LEFT = 92;
+const RIGHT = 16;
+const LANE_H = 64;
+const TOP = 34;
+const H = TOP + lanes.length * LANE_H + 12;
+const now = 2026 + 8.9 / 12; // late Sep 2026 — only affects the "present" bar end
+const x = (v: number) => LEFT + ((v - START) / (END - START)) * (W - LEFT - RIGHT);
+const laneY = (id: string) => TOP + lanes.findIndex((l) => l.id === id) * LANE_H;
+const years = Array.from({ length: END - Math.ceil(START) }, (_, i) => Math.ceil(START) + i);
+const laneColor: Record<string, string> = {
+  study: 'var(--tl-study)',
+  research: 'var(--accent)',
+  industry: 'var(--tl-industry)',
+  events: 'var(--accent)',
+};
+
+// stack overlapping spans within the same lane into sub-rows
+const rows: Record<string, number[]> = {};
+const placed = spans.map((s) => {
+  const e = s.end ?? now;
+  const list = (rows[s.lane] ||= []);
+  let r = list.findIndex((end) => end <= s.start + 0.001);
+  if (r === -1) { r = list.length; list.push(e); } else list[r] = e;
+  return { ...s, e, row: r };
+});
+
+const fmt = (v: number) => {
+  const y = Math.floor(v);
+  const m = Math.round((v - y) * 12);
+  return new Date(y, Math.min(m, 11)).toLocaleString('en', { month: 'short', year: 'numeric' });
+};
+
+// highlight markers: alternate labels above/below and nudge neighbours on the same side apart
+const evs = marks.filter((m) => m.lane === 'events').sort((a, b) => a.at - b.at);
+const lx = evs.map((m) => x(m.at));
+for (const side of [0, 1]) {
+  const idx = evs.map((_, i) => i).filter((i) => i % 2 === side);
+  for (let k = 1; k < idx.length; k++) {
+    const a = idx[k - 1], b = idx[k];
+    const need = (evs[a].label.length + evs[b].label.length) * 3.3 + 8;
+    const gap = lx[b] - lx[a];
+    if (gap < need) { const d = (need - gap) / 2; lx[a] -= d; lx[b] += d; }
+  }
+}
+---
+
+<div class="journey">
+  <div class="scroller">
+    <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-labelledby="jt jd">
+      <title id="jt">Career timeline 2014–2026</title>
+      <desc id="jd">Study, research and industry roles over time; the full list is available below the chart.</desc>
+
+      <defs>
+        <linearGradient id="live" x1="0" x2="1" y1="0" y2="0">
+          <stop offset="0.55" style="stop-color: var(--tl-industry)" />
+          <stop offset="1" style="stop-color: var(--tl-industry); stop-opacity: 0.25" />
+        </linearGradient>
+      </defs>
+
+      {years.map((y) => (
+        <g>
+          <line x1={x(y)} x2={x(y)} y1={TOP - 12} y2={H - 8} class="grid" />
+          <text x={x(y) + 4} y={TOP - 18} class="yr">{`’${String(y).slice(2)}`}</text>
+        </g>
+      ))}
+
+      {lanes.map((l) => (
+        <g>
+          <text x={0} y={laneY(l.id) + 22} class="lane">
+            {l.label.includes(' & ')
+              ? l.label.split(' & ').map((w, i) => <tspan x={0} dy={i ? 14 : 0}>{i ? '& ' + w : w}</tspan>)
+              : l.label}
+          </text>
+          <line x1={LEFT} x2={W - RIGHT} y1={laneY(l.id) + LANE_H - 6} y2={laneY(l.id) + LANE_H - 6} class="lane-rule" />
+        </g>
+      ))}
+
+      {placed.map((s) => {
+        const y = laneY(s.lane) + 6 + s.row * 26;
+        const w = Math.max(x(s.e) - x(s.start), 6);
+        const wide = w > s.label.length * 6.7 + 12;
+        const below = s.lane === 'industry' && !s.end ? false : s.label === 'GSoC';
+        return (
+          <g class="span" tabindex="0" data-title={`${s.label} · ${s.org}`} data-when={`${fmt(s.start)} – ${s.end ? fmt(s.end) : 'present'}`} data-detail={s.detail}>
+            <rect x={x(s.start)} y={y} width={w} height={20} rx={3} style={`fill:${s.end ? laneColor[s.lane] : 'url(#live)'}`} />
+            {wide && <text x={x(s.start) + 7} y={y + 14} class="bar-label">{s.label}</text>}
+            {!wide && !s.end && <text x={x(s.start) - 6} y={y + 14} class="bar-label outside" text-anchor="end">{s.label}</text>}
+            {!wide && s.end && <text x={below ? x(s.start) : x(s.e)} y={below ? y + 33 : y - 5} class="bar-label outside" text-anchor={below ? 'start' : 'end'}>{s.label}</text>}
+          </g>
+        );
+      })}
+
+      {marks.filter((m) => m.lane !== 'events').map((m) => (
+        <g class="span" tabindex="0" data-title={m.label} data-when="" data-detail={m.detail}>
+          <circle cx={x(m.at)} cy={laneY(m.lane) + 48} r={5.5} class="dot" />
+          <text x={x(m.at) + 9} y={laneY(m.lane) + 52} class="dot-label">{m.label}</text>
+        </g>
+      ))}
+
+      {evs.map((m, i) => {
+        const up = i % 2 === 0, cx = x(m.at), cy = laneY('events') + 26 + (up ? -5 : 5);
+        return (
+          <g class="span" tabindex="0" data-title={m.label} data-when="" data-detail={m.detail}>
+            <circle cx={cx} cy={cy} r={5.5} class="dot" />
+            <text x={lx[i]} y={up ? cy - 12 : cy + 21} text-anchor="middle" class="dot-label">{m.label}</text>
+          </g>
+        );
+      })}
+
+      <line x1={x(now)} x2={x(now)} y1={TOP - 12} y2={H - 8} class="now" />
+      <text x={x(now) - 4} y={H - 1} class="now-label" text-anchor="end">now</text>
+    </svg>
+  </div>
+  <div class="tip" role="status" aria-live="polite">
+    <span class="mono tip-when">Hover or tap a bar or marker</span>
+    <strong class="tip-title">Twelve years, four lanes.</strong>
+    <span class="tip-detail">Geography → software → visual analytics → AI tooling.</span>
+  </div>
+
+  <ol class="list">
+    {[
+      ...placed.map((s) => ({ at: s.start, when: `${fmt(s.start)} – ${s.end ? fmt(s.end) : 'present'}`, title: `${s.label} · ${s.org}`, d: s.detail })),
+      ...marks.map((m) => ({ at: m.at, when: fmt(m.at), title: m.label, d: m.detail })),
+    ].sort((a, b) => b.at - a.at).map((e) => (
+      <li>
+        <span class="mono">{e.when}</span>
+        <strong>{e.title}</strong>
+        <span class="d">{e.d}</span>
+      </li>
+    ))}
+  </ol>
+</div>
+
+<script>
+  const root = document.querySelector<HTMLElement>('.journey')!;
+  const when = root.querySelector<HTMLElement>('.tip-when')!;
+  const title = root.querySelector<HTMLElement>('.tip-title')!;
+  const detail = root.querySelector<HTMLElement>('.tip-detail')!;
+  root.querySelectorAll<SVGGElement>('.span').forEach((g) => {
+    const show = () => {
+      root.querySelectorAll('.span.on').forEach((o) => o.classList.remove('on'));
+      g.classList.add('on');
+      when.textContent = g.dataset.when || '·';
+      title.textContent = g.dataset.title || '';
+      detail.textContent = g.dataset.detail || '';
+    };
+    g.addEventListener('pointerenter', show);
+    g.addEventListener('focus', show);
+    g.addEventListener('click', show);
+  });
+</script>
+
+<style>
+  .scroller {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    max-width: 100%;
+  }
+  svg {
+    width: 100%;
+    min-width: 760px;
+    height: auto;
+    display: block;
+    font-family: var(--mono);
+  }
+  .grid { stroke: var(--rule); stroke-width: 1; }
+  .yr { font-size: 11px; fill: var(--ink-3); }
+  .lane { font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; fill: var(--ink); }
+  .lane-rule { stroke: var(--ink); stroke-width: 0.6; opacity: 0.25; }
+  .span { cursor: pointer; outline: none; }
+  .span rect { opacity: 0.88; transition: opacity 0.15s, filter 0.15s; }
+  .span:hover rect,
+  .span.on rect,
+  .span:focus-visible rect { opacity: 1; filter: drop-shadow(0 2px 0 var(--ink)); }
+  .bar-label { font-size: 11px; fill: #fff; pointer-events: none; font-weight: 500; }
+  .bar-label.outside { fill: var(--ink-2); font-size: 10px; }
+  .dot { fill: var(--paper); stroke: var(--ink); stroke-width: 1.6; }
+  .span:hover .dot, .span.on .dot { fill: var(--accent); stroke: var(--accent); }
+  .event { fill: var(--green); stroke: var(--ink); stroke-width: 1; }
+  .visit { fill: var(--paper); stroke: var(--green); stroke-width: 2.2; }
+  .span:hover .visit, .span.on .visit { fill: var(--magenta); stroke: var(--magenta); }
+  .span:hover .event, .span.on .event { fill: var(--magenta); }
+  .dot-label { font-size: 10.5px; fill: var(--ink-2); }
+  .now { stroke: var(--accent); stroke-dasharray: 3 3; }
+  .now-label { font-size: 10px; fill: var(--accent); }
+
+  .tip {
+    margin-top: 20px;
+    display: grid;
+    grid-template-columns: 200px 1fr;
+    gap: 2px 24px;
+    padding: 16px 0;
+    border-top: 1px solid var(--rule);
+    border-bottom: 1px solid var(--rule);
+    min-height: 84px;
+  }
+  .tip-when { color: var(--ink-3); grid-row: span 2; padding-top: 4px; }
+  .tip-title { font-family: var(--serif); font-size: 22px; font-weight: 450; line-height: 1.25; }
+  .tip-detail { color: var(--ink-2); }
+
+  .list { display: none; }
+
+  @media (max-width: 720px) {
+    .tip { grid-template-columns: 1fr; }
+    .tip-when { grid-row: auto; }
+    .list {
+      display: block;
+      list-style: none;
+      padding: 0;
+      margin: 28px 0 0;
+    }
+    .list li { padding: 12px 0; border-bottom: 1px solid var(--rule); }
+    .list .mono { display: block; color: var(--ink-3); font-size: 11px; }
+    .list .d { display: block; color: var(--ink-2); font-size: 15px; }
+  }
+</style>
