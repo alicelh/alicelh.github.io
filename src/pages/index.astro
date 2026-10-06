@@ -189,7 +189,19 @@ const [featured, ...rest] = works;
       <ul class="links">
         {person.links.map((l) => <li><a class="arrow-link" href={l.href} target="_blank" rel="noopener">{l.label}</a></li>)}
       </ul>
-      <p class="mono colophon">© {new Date().getFullYear()} Linhao Meng · Built with Astro · The dots up top are a toy, not real data.</p>
+      <p class="mono colophon">© {new Date().getFullYear()} Linhao Meng · Built with Astro<span id="busuanzi_container_site_uv" style="display:none"> · <span id="busuanzi_value_site_uv"></span> visitors · <span id="busuanzi_value_site_pv"></span> page views</span></p>
+      <script is:inline async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+      <script is:inline>
+        // add thousands separators once the counter fills in
+        ['busuanzi_value_site_uv', 'busuanzi_value_site_pv'].forEach(function (id) {
+          var el = document.getElementById(id);
+          if (!el) return;
+          new MutationObserver(function () {
+            var n = parseInt(el.textContent, 10);
+            if (!isNaN(n) && el.textContent.indexOf(',') < 0) el.textContent = n.toLocaleString('en');
+          }).observe(el, { childList: true, characterData: true, subtree: true });
+        });
+      </script>
     </div>
   </footer>
 
