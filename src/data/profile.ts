@@ -317,11 +317,6 @@ export const marks: Mark[] = [
   { lane: 'events', kind: 'visit', label: 'Oxford', at: 2024.38, detail: 'Research visit, Oxford e-Research Centre, May–Jun 2024' },
   { lane: 'events', kind: 'visit', label: 'ELLIIT', at: 2025.29, detail: 'Invited Visiting Scholar, ELLIIT Focus Period, Linköping University, Apr–May 2025' },
   { lane: 'events', label: 'PhD defense', at: 2025.84, detail: 'PhD thesis defended, Nov 2025' },
-  { lane: 'events', label: 'EuroVis ’21', at: 2021.46, detail: 'Student volunteer, EuroVis 2021, Jun 2021' },
-  { lane: 'events', label: 'ICT Open', at: 2022.29, detail: 'Poster, ICT Open 2022, Apr 2022' },
-  { lane: 'events', label: 'EuroVis ’22', at: 2022.46, detail: 'Paper presentation (ModelWise), EuroVis 2022, Rome, Jun 2022' },
-  { lane: 'events', label: 'VIS ’23', at: 2023.8, detail: 'Paper presentation (Class-Constrained t-SNE), IEEE VIS 2023, Melbourne, Oct 2023' },
-  { lane: 'events', label: 'VIS ’25', at: 2025.84, detail: 'Paper presentation (difficulty-aware analysis of DNNs), IEEE VIS 2025, Vienna, Nov 2025' },
 ];
 
 // ── Community ─────────────────────────────────────────────────
