@@ -12,7 +12,7 @@ export const person = {
   tagline:
     'I build data and interaction tools that help people understand, evaluate, and work alongside AI.',
   intro: [
-    'I am a software engineer at ByteDance, building developer tooling for Volcano Engine Ark, ByteDance’s Model-as-a-Service (MaaS) platform, and an AI-assisted video creation platform where creators and AI produce videos together.',
+    'I am a software engineer at ByteDance, building developer tools for an AI model platform and creative tools where people and AI make content together.',
     'Before that, I spent five years at Eindhoven University of Technology (PhD and postdoc) building algorithms and interactive tools that help people understand, compare, and debug AI models — and studying how they actually use them, from ML practitioners to clinicians.',
   ],
   links: [
@@ -47,7 +47,7 @@ export const now = [
 
 export const next = {
   title: 'Where I want to go next: human–AI collaboration.',
-  body: 'Building a platform where creators and AI make videos together, and earlier studying how clinicians use AI tools in practice, left me with one question I keep coming back to: how can people and AI agents create, reason, and make decisions together? That is the research direction I want to pursue next.',
+  body: 'Building tools where people and AI create together, and earlier studying how clinicians use AI tools in practice, left me with one question I keep coming back to: how can people and AI agents create, reason, and make decisions together? That is the research direction I want to pursue next.',
 };
 
 // ── Selected work (cards with images) ─────────────────────────
@@ -147,12 +147,12 @@ export const themes = [
   },
   {
     title: 'Interaction & human–AI collaboration',
-    body: 'Interactive systems and user studies: how clinicians and ML practitioners use AI tools, what-if questions with counterfactuals, LLM-written explanations of data, and a 3D interface where creators and AI make videos together.',
+    body: 'Interactive systems and user studies: how clinicians and ML practitioners use AI tools, what-if questions with counterfactuals, LLM-written explanations of data, and creative tools where people and AI make content together.',
     where: 'EU SmartCHANGE · ELLIIT, Linköping · ByteDance',
   },
   {
     title: 'Platforms & developer tooling',
-    body: 'A CLI and skill library that let developers and AI agents use a Model-as-a-Service platform, and earlier, dashboards, a visualization component library, and open-source visualization for SynBioHub.',
+    body: 'Developer tools for an AI model platform, and earlier, dashboards, a visualization component library, and open-source visualization for SynBioHub.',
     where: 'ByteDance · Cisco · Zhejiang University · Google Summer of Code',
   },
 ];
@@ -310,7 +310,7 @@ export const spans: Span[] = [
   { lane: 'research', label: 'Postdoc', org: 'TU Eindhoven · EU SmartCHANGE', start: 2025.25, end: 2025.96, detail: 'Counterfactual and what-if analysis tools; studying how clinicians use AI tools' },
   { lane: 'industry', label: 'Cisco', org: 'Software Engineer Intern, DevNet', start: 2019.58, end: 2020.29, detail: 'Project-progress dashboard: React frontend, REST API, data model' },
   { lane: 'industry', label: 'GSoC', org: 'NRNB / University of Utah', start: 2020.33, end: 2020.62, detail: 'Open-source contributor: SynBioHub sequence visualization (VisBOL2)' },
-  { lane: 'industry', label: 'ByteDance', org: 'Software Engineer, Data-AML', start: 2026.17, end: null, detail: 'ArkCLI for Volcano Engine Ark; AI-assisted video creation platform' },
+  { lane: 'industry', label: 'ByteDance', org: 'Software Engineer, Data-AML', start: 2026.17, end: null, detail: 'Developer tools for an AI model platform; human–AI creative tools' },
 ];
 
 export const marks: Mark[] = [
